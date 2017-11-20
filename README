@@ -1,0 +1,13 @@
+This should contain all the Matlab code for SMOTE0
+
+In order to make the code run, you need to get the following toolboxes:
+1. Prtools,    prtools.org
+2. DDtools,    https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/intelligent-systems/pattern-recognition-bioinformatics/pattern-recognition-laboratory/data-and-software/dd-tools/
+3. Restools,   https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/intelligent-systems/pattern-recognition-bioinformatics/pattern-recognition-laboratory/data-and-software/mil-tools/
+
+The datasets should be available, maybe in:
+/tudelft.net/staff-groups/ewi/insy/PRLab/smote0
+
+Then the main function is
+experiment.m
+
