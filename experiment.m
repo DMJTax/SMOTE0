@@ -1,4 +1,16 @@
-function experiment(dname,frac,wnr)
+%   R = EXPERIMENT(NAME,NR,FRAC)
+%
+% Do the noise-injection experiments on dataset NAME, using classifier
+% NR:
+% 1. LDA
+% 2. Parzen
+% 3. 1-NN
+% 4. SVM quadratic kernel
+%
+% The minority class is upsampled to a fraction FRAC of the majority
+% class. (I.e. when FRAC=1 both classes are balanced)
+
+function R = experiment(dname,wnr,frac)
 
 %dpath = '/data/smote0/';
 dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
@@ -34,30 +46,28 @@ for i=1:nrfolds
    % how many objects to generate?:
    n = size(x,1);
    m = sum(istarget(x));
-   N = frac*(n-m) - m;
+   N = ceil(frac*(n-m) - m);
 
    % train on orig. data
    w_tr = x*u;
    out = z*w_tr;
    err(1,1,i) = dd_auc(out);
-   r = dd_prc(out);
-   err(1,2,i) = dd_avprec(r);
+   err(1,2,i) = dd_avprec(dd_prc(out));
 
    % train on Parzen NI
    x_extra = gendatp(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(2,i) = dd_auc(out);
-   r = dd_prc(out);
-   err(2,2,i) = dd_avprec(r);
+   err(2,1,i) = dd_auc(out);
+   err(2,2,i) = dd_avprec(dd_prc(out));
 
    % train on kNN NI
    x_extra = gendatk(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(3,i) = dd_auc(out);
-   r = dd_prc(out);
-   err(3,2,i) = dd_avprec(r);
+   err(3,1,i) = dd_auc(out);
+   err(3,2,i) = dd_avprec(dd_prc(out));
+
 end
 dd_message(3,'\n');
 
