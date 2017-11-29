@@ -8,3 +8,23 @@ David  datasets
        prior influence?
 Tom SMOTE, ADOMS, CBOS
 
+
+Datasets:
+artificial/low dim datasets (to show that it is not so good?)  Twonorm, ringnorm.
+* high dim UCI datasets? 
+  + satimage 36D,
+  + WDBC Breast 30D,
+  + Water-treatment 38D,
+  + Letter 16D,
+  + vehicle 18D,
+  + ionosphere 34D,
+  + hepatitis 19D,
+  + dermatology 34D,
+  + solar flare 10D
+  vowel 13D,
+  + splice 60,
+  + abalone 8D
+
+  - 
+* fashion/clothing,
+NORB, MNIST?
