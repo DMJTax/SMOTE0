@@ -12,8 +12,8 @@
 
 function R = experiment(dname,wnr,frac)
 
-%dpath = '/data/smote0/';
-dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+dpath = '/data/smote0/';
+%dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
 load([dpath,dname]);
 
 %settings for classification:
@@ -34,6 +34,11 @@ end
 
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
+samplingnames = {'org';
+'ROS';
+'Parzen NI';
+'kNN NI';
+};
 perf = repmat(NaN,[3 2 nrfolds]);
 
 % start the loops:
@@ -54,27 +59,35 @@ for i=1:nrfolds
    err(1,1,i) = dd_auc(out);
    err(1,2,i) = dd_avprec(dd_prc(out));
 
-   % train on Parzen NI
-   x_extra = gendatp(target_class(x),N);
+   % train on random oversampling
+   x_extra = gendat(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    err(2,1,i) = dd_auc(out);
    err(2,2,i) = dd_avprec(dd_prc(out));
 
-   % train on kNN NI
-   x_extra = gendatk(target_class(x),N);
+   % train on Parzen NI
+   x_extra = gendatp(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    err(3,1,i) = dd_auc(out);
    err(3,2,i) = dd_avprec(dd_prc(out));
 
+   % train on kNN NI
+   x_extra = gendatk(target_class(x),N);
+   w_tr = [x;x_extra]*u;
+   out = z*w_tr;
+   err(4,1,i) = dd_auc(out);
+   err(4,2,i) = dd_avprec(dd_prc(out));
+
 end
 dd_message(3,'\n');
 
 % and store everything nicely:
-R = results(err,{'org' 'ParzenNI' 'kNN NI'},{'AUC' 'AP'},nrfolds);
+R = results(err,samplingnames,{'AUC' 'AP'},nrfolds);
 R = setdimname(R,'upsampling','perf','run');
 R = setname(R,fname);
+save(fname,'R');
 
 % And give some output to the command line:
 fprintf('\n%s\n\n',repmat('=',1,50));
