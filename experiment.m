@@ -27,7 +27,7 @@ prmemory inf;
 reg = 1e-6;
 switch wnr
 case 1 
-u = loglc2([],reg,reg)*classc;
+u = loglc2([],reg)*classc;
 case 2 
 u = scalem([],'variance')*parzenc*classc;
 case 3 
@@ -47,8 +47,9 @@ samplingnames = {'org';
    'kNN NI';
 };
 nrfolds = 10;
-kset = [1 5 10 25];  nrkset = length(kset);
+kset = [1 5 10 15];  nrkset = length(kset);
 nrintfolds = 5;
+optK = zeros(1,nrfolds);
 perf = repmat(NaN,[3 2 nrfolds]);
 
 % start the loops:
@@ -84,7 +85,7 @@ for i=1:nrfolds
    err(3,2,i) = dd_avprec(dd_prc(out));
 
    % train on kNN NI
-   tmperr = zerors(nrkset,nrintfolds);
+   tmperr = zeros(nrkset,nrintfolds);
    Iint = nrintfolds;
    for j=1:nrintfolds
       dd_message(4,'%d/%d ',j,nrintfolds);
@@ -98,6 +99,7 @@ for i=1:nrfolds
    end
    % which performs best?
    [mx,Kbest] = max(mean(tmperr,2));
+   optK(i) = kset(Kbest);
    x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
@@ -117,3 +119,4 @@ save(fname,'R');
 S = average(100*R,3,'max1','dep');
 show(S,'text','%4.1f');
 
+optK
