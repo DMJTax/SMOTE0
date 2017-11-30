@@ -12,33 +12,43 @@
 
 function R = experiment(dname,wnr,frac)
 
-%dpath = '/data/smote0/';
-dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+% get the dataset:
+if exist('/data/smote0/')
+   dpath = '/data/smote0/';
+else
+   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+end
 load([dpath,dname]);
 
-%settings for classification:
+%definition of classifiers and settings for classification:
+% [DXD should be updated]
 prwaitbar off;
-nrfolds = 10;
+prmemory inf;
 reg = 1e-6;
 switch wnr
 case 1 
-u = ldc([],reg,reg)*classc;
+u = loglc2([],reg,reg)*classc;
 case 2 
 u = scalem([],'variance')*parzenc*classc;
 case 3 
 u = scalem([],'variance')*knnc([],1);
 case 4 
 u = scalem([],'variance')*incsvc([],'p',2,10);
+case 5 
+u = randomforestc([],100,3)*classc;
 end
 
 
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
 samplingnames = {'org';
-'ROS';
-'Parzen NI';
-'kNN NI';
+   'ROS';
+   'Parzen NI';
+   'kNN NI';
 };
+nrfolds = 10;
+kset = [1 5 10 25];  nrkset = length(kset);
+nrintfolds = 5;
 perf = repmat(NaN,[3 2 nrfolds]);
 
 % start the loops:
@@ -74,7 +84,21 @@ for i=1:nrfolds
    err(3,2,i) = dd_avprec(dd_prc(out));
 
    % train on kNN NI
-   x_extra = gendatk(target_class(x),N);
+   tmperr = zerors(nrkset,nrintfolds);
+   Iint = nrintfolds;
+   for j=1:nrintfolds
+      dd_message(4,'%d/%d ',j,nrintfolds);
+      [xint, zint, Iint] = dd_crossval(x,Iint);
+      for k=1:nrkset
+         x_extra = gendatk(target_class(xint),N,kset(k));
+         w_tr = [xint;x_extra]*u;
+         out = zint*w_tr;
+         tmperr(k,j) = dd_auc(out);
+      end
+   end
+   % which performs best?
+   [mx,Kbest] = max(mean(tmperr,2));
+   x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    err(4,1,i) = dd_auc(out);
@@ -90,8 +114,6 @@ R = setname(R,fname);
 save(fname,'R');
 
 % And give some output to the command line:
-fprintf('\n%s\n\n',repmat('=',1,50));
-a
 S = average(100*R,3,'max1','dep');
 show(S,'text','%4.1f');
 
