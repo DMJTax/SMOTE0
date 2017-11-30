@@ -12,12 +12,16 @@
 
 function R = experiment(dname,wnr,frac)
 
+%
 % get the dataset:
-if exist('/data/smote0/')
-   dpath = '/data/smote0/';
-else
-   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
-end
+%if exist('/data/smote0/')
+%   dpath = '/data/smote0/';
+%else
+%   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+%end
+% dpath = '/data/smote0/';
+% dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+load('datapath.m');
 load([dpath,dname]);
 
 %definition of classifiers and settings for classification:
