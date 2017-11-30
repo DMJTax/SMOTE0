@@ -1,4 +1,8 @@
+% please make a copy of this file, and call this copy datapath.m
+% then, in this file (datapath.m), please the path to the path that works on your machine
+
 % this folder should contain the datapath with a final \
+dpath = '\\tudelft.net\staff-groups\ewi\insy\PRLab\data\smote0\'; % windows path (Tom)
 
-dpath = '\\tudelft.net\staff-groups\ewi\insy\PRLab\data\smote0\';
-
+%   dpath = '/data/smote0/'; David MAC path?
+%   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/'; % server path?
