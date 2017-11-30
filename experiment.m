@@ -115,7 +115,7 @@ dd_message(3,'\n');
 R = results(err,samplingnames,{'AUC' 'AP'},nrfolds);
 R = setdimname(R,'upsampling','perf','run');
 R = setname(R,fname);
-save(fname,'R');
+save([rpath,fname],'R');
 
 % And give some output to the command line:
 S = average(100*R,3,'max1','dep');

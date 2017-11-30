@@ -3,6 +3,7 @@
 
 % this folder should contain the datapath with a final \
 dpath = '\\tudelft.net\staff-groups\ewi\insy\PRLab\data\smote0\'; % windows path (Tom)
+rpath = 'results\'; % result path (Windows, Tom)
 
 %   dpath = '/data/smote0/'; David MAC path?
 %   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/'; % server path?
