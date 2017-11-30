@@ -39,7 +39,7 @@ end
 
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
-samplingnames = {'org';
+samplingnames = {'original';
    'ROS';
    'Parzen NI';
    'kNN NI';
@@ -85,6 +85,8 @@ for i=1:nrfolds
    % train on kNN NI
    tmperr = zeros(nrkset,nrintfolds);
    Iint = nrintfolds;
+   
+   fprintf('Internal crossvalidation: ');
    for j=1:nrintfolds
       dd_message(4,'%d/%d ',j,nrintfolds);
       [xint, zint, Iint] = dd_crossval(x,Iint);
@@ -93,6 +95,8 @@ for i=1:nrfolds
          w_tr = [xint;x_extra]*u;
          out = zint*w_tr;
          tmperr(k,j) = dd_auc(out);
+         % TODO: Internal cross validation should be on AUC if we evaluate
+         % in terms of AUC, but it should be MAP if we evaluate MAP
       end
    end
    % which performs best?
@@ -103,7 +107,7 @@ for i=1:nrfolds
    out = z*w_tr;
    err(4,1,i) = dd_auc(out);
    err(4,2,i) = dd_avprec(dd_prc(out));
-
+   fprintf('\n');
 end
 dd_message(3,'\n');
 
