@@ -12,8 +12,9 @@
 
 function R = experiment(dname,wnr,frac)
 
-%dpath = '/data/smote0/';
-dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+% dpath = '/data/smote0/';
+% dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
+load('datapath.m');
 load([dpath,dname]);
 
 %settings for classification:
