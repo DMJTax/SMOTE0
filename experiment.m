@@ -44,23 +44,28 @@ samplingnames = {'original';
    'Parzen NI';
    'kNN NI';
 };
-nrfolds = 10;
-kset = [1 5 10 15];  nrkset = length(kset);
-nrintfolds = 5;
-optK = zeros(1,nrfolds);
-perf = repmat(NaN,[3 2 nrfolds]);
+nrfolds = 10; % number of folds for evaluation (outer folds)
+kset = [1 5 10 15]; % number of neighbours to try (hyperparam)
+nrkset = length(kset); % distinct possibilities for kset
+nrintfolds = 5; % internal number of folds to use for opt. hyperparam.
+
+optK = zeros(1,nrfolds); % the optimal K of each fold
+err = NaN(4,2,nrfolds); 
+% first dim = number of algorithms
+% second    = AUC, MAP
+% thurd     = folds
 
 % start the loops:
 I = nrfolds;
 for i=1:nrfolds
 	dd_message(3,'%d/%d ',i,nrfolds);
-	[x,z,I] = dd_crossval(a,I);
-	z = remclass(z);
+	[x,z,I] = dd_crossval(a,I); % x = trn, z = tst
+	z = remclass(z); % why?
 
    % how many objects to generate?:
-   n = size(x,1);
-   m = sum(istarget(x));
-   N = ceil(frac*(n-m) - m);
+   n = size(x,1);            % trnsize
+   m = sum(istarget(x));     % minority size
+   N = ceil(frac*(n-m) - m); % samples to generate
 
    % train on orig. data
    w_tr = x*u;
@@ -98,13 +103,22 @@ for i=1:nrfolds
          % TODO: Internal cross validation should be on AUC if we evaluate
          % in terms of AUC, but it should be MAP if we evaluate MAP
       end
+      
+      % TODO: SMOTE
+      % TODO: CBOS
+      % TODO: ADOMS
+      
+      % TODO: PRIORS / REWEIGHTING OF CLASSES
+      
+      
    end
    % which performs best?
-   [mx,Kbest] = max(mean(tmperr,2));
+   [~,Kbest] = max(mean(tmperr,2));
    optK(i) = kset(Kbest);
    x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
+   
    err(4,1,i) = dd_auc(out);
    err(4,2,i) = dd_avprec(dd_prc(out));
    fprintf('\n');
