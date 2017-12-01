@@ -98,7 +98,7 @@ for i=1:nrfolds
    err(4,2,i) = dd_avprec(dd_prc(out));
 
    % 5: train on kNN NI
-   tmperr = zeros(nrkset,nrintfolds);
+   tmperr = zeros(2,nrkset,nrintfolds);
    Iint = nrintfolds;
    
    fprintf('Internal crossvalidation: ');
@@ -109,20 +109,26 @@ for i=1:nrfolds
          x_extra = gendatk(target_class(xint),N,kset(k));
          w_tr = [xint;x_extra]*u;
          out = zint*w_tr;
-         tmperr(k,j) = dd_auc(out);
+         tmperr(1,k,j) = dd_auc(out);
+         tmperr(2,k,j) = dd_avprec(dd_prc(out));
          % TODO: Internal cross validation should be on AUC if we evaluate
          % in terms of AUC, but it should be MAP if we evaluate MAP
       end % loop over all k's
    end % internal fold
    
-   % which performs best?
-   [~,Kbest] = max(mean(tmperr,2));
+   % which performs best for AUC?
+   [~,Kbest] = max(mean(tmperr(1,:,:),3));
    optK(i) = kset(Kbest);
    x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   
    err(5,1,i) = dd_auc(out);
+   % which performs best for Average Precision?
+   [~,Kbest] = max(mean(tmperr(2,:,:),3));
+   optK(i) = kset(Kbest);
+   x_extra = gendatk(target_class(x),N,kset(Kbest));
+   w_tr = [x;x_extra]*u;
+   out = z*w_tr;
    err(5,2,i) = dd_avprec(dd_prc(out));
    
    % 6: train on SMOTEd data (k = 1)
