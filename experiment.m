@@ -40,6 +40,7 @@ end
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
 samplingnames = {'original';
+   'balance priors';
    'ROS';
    'Parzen NI';
    'kNN NI';
@@ -48,7 +49,6 @@ nrfolds = 10; % number of folds for evaluation (outer folds)
 kset = [1 5 10 15]; % number of neighbours to try (hyperparam)
 nrkset = length(kset); % distinct possibilities for kset
 nrintfolds = 5; % internal number of folds to use for opt. hyperparam.
-
 optK = zeros(1,nrfolds); % the optimal K of each fold
 err = NaN(4,2,nrfolds); 
 % first dim = number of algorithms
@@ -73,19 +73,26 @@ for i=1:nrfolds
    err(1,1,i) = dd_auc(out);
    err(1,2,i) = dd_avprec(dd_prc(out));
 
+   % adapt class priors
+   xprior = setprior(x,[0.5 0.5]);
+   w_tr = xprior*u;
+   out = z*w_tr;
+   err(2,1,i) = dd_auc(out);
+   err(2,2,i) = dd_avprec(dd_prc(out));
+
    % train on random oversampling
    x_extra = gendat(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(2,1,i) = dd_auc(out);
-   err(2,2,i) = dd_avprec(dd_prc(out));
+   err(3,1,i) = dd_auc(out);
+   err(3,2,i) = dd_avprec(dd_prc(out));
 
    % train on Parzen NI
    x_extra = gendatp(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(3,1,i) = dd_auc(out);
-   err(3,2,i) = dd_avprec(dd_prc(out));
+   err(4,1,i) = dd_auc(out);
+   err(4,2,i) = dd_avprec(dd_prc(out));
 
    % train on kNN NI
    tmperr = zeros(nrkset,nrintfolds);
@@ -121,7 +128,7 @@ for i=1:nrfolds
    
    err(4,1,i) = dd_auc(out);
    err(4,2,i) = dd_avprec(dd_prc(out));
-   fprintf('\n');
+   dd_message(4,'\n');
 end
 dd_message(3,'\n');
 
