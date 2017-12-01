@@ -42,6 +42,7 @@ end
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
 samplingnames = {'org';
+   'balance priors';
    'ROS';
    'Parzen NI';
    'kNN NI';
@@ -50,7 +51,7 @@ nrfolds = 10;
 kset = [1 5 10 15];  nrkset = length(kset);
 nrintfolds = 5;
 optK = zeros(1,nrfolds);
-perf = repmat(NaN,[3 2 nrfolds]);
+perf = repmat(NaN,[5 2 nrfolds]);
 
 % start the loops:
 I = nrfolds;
@@ -70,19 +71,26 @@ for i=1:nrfolds
    err(1,1,i) = dd_auc(out);
    err(1,2,i) = dd_avprec(dd_prc(out));
 
+   % adapt class priors
+   xprior = setprior(x,[0.5 0.5]);
+   w_tr = xprior*u;
+   out = z*w_tr;
+   err(2,1,i) = dd_auc(out);
+   err(2,2,i) = dd_avprec(dd_prc(out));
+
    % train on random oversampling
    x_extra = gendat(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(2,1,i) = dd_auc(out);
-   err(2,2,i) = dd_avprec(dd_prc(out));
+   err(3,1,i) = dd_auc(out);
+   err(3,2,i) = dd_avprec(dd_prc(out));
 
    % train on Parzen NI
    x_extra = gendatp(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(3,1,i) = dd_auc(out);
-   err(3,2,i) = dd_avprec(dd_prc(out));
+   err(4,1,i) = dd_auc(out);
+   err(4,2,i) = dd_avprec(dd_prc(out));
 
    % train on kNN NI
    tmperr = zeros(nrkset,nrintfolds);
@@ -103,8 +111,8 @@ for i=1:nrfolds
    x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(4,1,i) = dd_auc(out);
-   err(4,2,i) = dd_avprec(dd_prc(out));
+   err(5,1,i) = dd_auc(out);
+   err(5,2,i) = dd_avprec(dd_prc(out));
 
 end
 dd_message(3,'\n');
