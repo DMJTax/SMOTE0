@@ -25,6 +25,9 @@ for j = 1:length(smote_datasets)
     if (temp_object.isdir == 1) % skip directories
         continue;
     end
+    if (strcmp(temp_object.name,'info.html'))
+        continue;
+    end
     
     dataset_fname = temp_object.name;
     load([dpath,dataset_fname]);
@@ -65,3 +68,5 @@ fprintf('Classifier number:\n1. LDA\n2. Parzen\n3. 1-NN\n4. SVM quadratic kernel
 classifer_number = input('Please type classifier number: ');
 
 R = experiment(dataset_totry_name,classifer_number,oversampling_rate);
+
+load([dpath,dataset_totry_name]);
