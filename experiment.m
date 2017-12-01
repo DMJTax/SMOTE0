@@ -12,12 +12,10 @@
 
 function R = experiment(dname,wnr,frac)
 
-% get the dataset:
-if exist('/data/smote0/')
-   dpath = '/data/smote0/';
-else
-   dpath = '/tudelft.net/staff-groups/ewi/insy/PRLab/data/smote0/';
-end
+run('datapath.m'); % get the correct datapath
+% if this file is missing, use datapath.m.example
+% to create a file called 'datapath.m' for this machine
+
 load([dpath,dname]);
 
 %definition of classifiers and settings for classification:
@@ -41,29 +39,33 @@ end
 
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
-samplingnames = {'org';
+samplingnames = {'original';
    'balance priors';
    'ROS';
    'Parzen NI';
    'kNN NI';
 };
-nrfolds = 10;
-kset = [1 5 10 15];  nrkset = length(kset);
-nrintfolds = 5;
-optK = zeros(1,nrfolds);
-perf = repmat(NaN,[5 2 nrfolds]);
+nrfolds = 10; % number of folds for evaluation (outer folds)
+kset = [1 5 10 15]; % number of neighbours to try (hyperparam)
+nrkset = length(kset); % distinct possibilities for kset
+nrintfolds = 5; % internal number of folds to use for opt. hyperparam.
+optK = zeros(1,nrfolds); % the optimal K of each fold
+err = NaN(4,2,nrfolds); 
+% first dim = number of algorithms
+% second    = AUC, MAP
+% thurd     = folds
 
 % start the loops:
 I = nrfolds;
 for i=1:nrfolds
 	dd_message(3,'%d/%d ',i,nrfolds);
-	[x,z,I] = dd_crossval(a,I);
-	z = remclass(z);
+	[x,z,I] = dd_crossval(a,I); % x = trn, z = tst
+	z = remclass(z); % why?
 
    % how many objects to generate?:
-   n = size(x,1);
-   m = sum(istarget(x));
-   N = ceil(frac*(n-m) - m);
+   n = size(x,1);            % trnsize
+   m = sum(istarget(x));     % minority size
+   N = ceil(frac*(n-m) - m); % samples to generate
 
    % train on orig. data
    w_tr = x*u;
@@ -95,6 +97,8 @@ for i=1:nrfolds
    % train on kNN NI
    tmperr = zeros(nrkset,nrintfolds);
    Iint = nrintfolds;
+   
+   fprintf('Internal crossvalidation: ');
    for j=1:nrintfolds
       dd_message(4,'%d/%d ',j,nrintfolds);
       [xint, zint, Iint] = dd_crossval(x,Iint);
@@ -103,17 +107,28 @@ for i=1:nrfolds
          w_tr = [xint;x_extra]*u;
          out = zint*w_tr;
          tmperr(k,j) = dd_auc(out);
+         % TODO: Internal cross validation should be on AUC if we evaluate
+         % in terms of AUC, but it should be MAP if we evaluate MAP
       end
+      
+      % TODO: SMOTE
+      % TODO: CBOS
+      % TODO: ADOMS
+      
+      % TODO: PRIORS / REWEIGHTING OF CLASSES
+      
+      
    end
    % which performs best?
-   [mx,Kbest] = max(mean(tmperr,2));
+   [~,Kbest] = max(mean(tmperr,2));
    optK(i) = kset(Kbest);
    x_extra = gendatk(target_class(x),N,kset(Kbest));
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
-   err(5,1,i) = dd_auc(out);
-   err(5,2,i) = dd_avprec(dd_prc(out));
-
+   
+   err(4,1,i) = dd_auc(out);
+   err(4,2,i) = dd_avprec(dd_prc(out));
+   dd_message(4,'\n');
 end
 dd_message(3,'\n');
 
@@ -121,7 +136,7 @@ dd_message(3,'\n');
 R = results(err,samplingnames,{'AUC' 'AP'},nrfolds);
 R = setdimname(R,'upsampling','perf','run');
 R = setname(R,fname);
-save(fname,'R');
+save([rpath,fname],'R');
 
 % And give some output to the command line:
 S = average(100*R,3,'max1','dep');
