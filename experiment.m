@@ -39,21 +39,24 @@ end
 
 %set other parameters and storage:
 fname = sprintf('res_%s_classf%d_frac%.0f',dname,wnr,100*frac);
-samplingnames = {'original';
-   'balance priors';
-   'ROS';
-   'Parzen NI';
-   'kNN NI';
+samplingnames = {
+   'original';         % 1
+   'balance priors';   % 2
+   'ROS';              % 3
+   'Parzen NI';        % 4 
+   'kNN NI';           % 5
+   'SMOTE k=1';        % 6
 };
 nrfolds = 10; % number of folds for evaluation (outer folds)
 kset = [1 5 10 15]; % number of neighbours to try (hyperparam)
 nrkset = length(kset); % distinct possibilities for kset
 nrintfolds = 5; % internal number of folds to use for opt. hyperparam.
 optK = zeros(1,nrfolds); % the optimal K of each fold
-err = NaN(4,2,nrfolds); 
-% first dim = number of algorithms
+
+err = NaN(length(samplingnames),2,nrfolds); 
+% first dim = number of sampling algorithms
 % second    = AUC, MAP
-% thurd     = folds
+% third     = folds
 
 % start the loops:
 I = nrfolds;
@@ -67,34 +70,34 @@ for i=1:nrfolds
    m = sum(istarget(x));     % minority size
    N = ceil(frac*(n-m) - m); % samples to generate
 
-   % train on orig. data
+   % 1: train on orig. data
    w_tr = x*u;
    out = z*w_tr;
    err(1,1,i) = dd_auc(out);
    err(1,2,i) = dd_avprec(dd_prc(out));
 
-   % adapt class priors
+   % 2: adapt class priors
    xprior = setprior(x,[0.5 0.5]);
    w_tr = xprior*u;
    out = z*w_tr;
    err(2,1,i) = dd_auc(out);
    err(2,2,i) = dd_avprec(dd_prc(out));
 
-   % train on random oversampling
+   % 3: train on random oversampling
    x_extra = gendat(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    err(3,1,i) = dd_auc(out);
    err(3,2,i) = dd_avprec(dd_prc(out));
 
-   % train on Parzen NI
+   % 4: train on Parzen NI
    x_extra = gendatp(target_class(x),N);
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    err(4,1,i) = dd_auc(out);
    err(4,2,i) = dd_avprec(dd_prc(out));
 
-   % train on kNN NI
+   % 5: train on kNN NI
    tmperr = zeros(nrkset,nrintfolds);
    Iint = nrintfolds;
    
@@ -109,16 +112,9 @@ for i=1:nrfolds
          tmperr(k,j) = dd_auc(out);
          % TODO: Internal cross validation should be on AUC if we evaluate
          % in terms of AUC, but it should be MAP if we evaluate MAP
-      end
-      
-      % TODO: SMOTE
-      % TODO: CBOS
-      % TODO: ADOMS
-      
-      % TODO: PRIORS / REWEIGHTING OF CLASSES
-      
-      
-   end
+      end % loop over all k's
+   end % internal fold
+   
    % which performs best?
    [~,Kbest] = max(mean(tmperr,2));
    optK(i) = kset(Kbest);
@@ -126,8 +122,16 @@ for i=1:nrfolds
    w_tr = [x;x_extra]*u;
    out = z*w_tr;
    
-   err(4,1,i) = dd_auc(out);
-   err(4,2,i) = dd_avprec(dd_prc(out));
+   err(5,1,i) = dd_auc(out);
+   err(5,2,i) = dd_avprec(dd_prc(out));
+   
+   % 6: train on SMOTEd data (k = 1)
+   x_extra = smote(target_class(x),N,1);
+   w_tr = [x;x_extra]*u;
+   out = z*w_tr;
+   err(6,1,i) = dd_auc(out);
+   err(6,2,i) = dd_avprec(dd_prc(out));
+   
    dd_message(4,'\n');
 end
 dd_message(3,'\n');
